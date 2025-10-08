@@ -1,0 +1,4 @@
+fastmcp
+msal
+PyJWT
+pydantic-settings
