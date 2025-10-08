@@ -23,8 +23,9 @@ def me():
     # Create ImageContent with just the base64 data
     image = ImageContent(type="image", data=base64_image, mimeType="image/png")
 
+    text2 = TextContent(type="text", text="Thank you!")
     # Combine text and image into a response
-    return [text, image]
+    return [text, image, text2]
 
 if __name__ == "__main__":
     mcp.run(transport="http", host="0.0.0.0", port=8000)
