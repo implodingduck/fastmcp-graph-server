@@ -1,7 +1,8 @@
 import asyncio
 from fastmcp import Client
 
-client = Client("https://apim-mcp-09871436.azure-api.net/fgs")
+#client = Client("https://apim-mcp-09871436.azure-api.net/fgs")
+client = Client("http://localhost:8000/mcp")
 
 async def call_tool(name: str):
     async with client:

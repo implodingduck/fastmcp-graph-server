@@ -22,12 +22,13 @@ def me():
 
     
     # Combine text and image into a response
-    return [
+    retval = [
+        image,
         TextContent(type="text", text="You have just called the 'me' tool."),
         TextContent(type="text", text="Hello current user! Here is your profile picture:"), 
-        image,
         TextContent(type="text", text="Thank you!")
     ]
+    return retval
 
 if __name__ == "__main__":
     mcp.run(transport="http", host="0.0.0.0", port=8000)
