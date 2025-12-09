@@ -10,7 +10,7 @@ def greet(name: str) -> str:
     return f"Hello, {name}!"
 
 @mcp.tool
-def me(ctx: Context):
+async def me(ctx: Context):
     # Image content (Base64 encoded)
     with open("app/sample_profile.png", "rb") as img_file:
         image_data = img_file.read()
