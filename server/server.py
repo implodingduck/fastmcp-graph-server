@@ -1,5 +1,6 @@
 import base64
-from fastmcp import FastMCP
+from fastmcp import FastMCP, Context
+from fastmcp.server.dependencies import get_http_headers
 from mcp.types import TextContent, ImageContent
 
 mcp = FastMCP("FastMCP Graph Server Example")
@@ -9,7 +10,7 @@ def greet(name: str) -> str:
     return f"Hello, {name}!"
 
 @mcp.tool
-def me():
+def me(ctx: Context):
     # Image content (Base64 encoded)
     with open("app/sample_profile.png", "rb") as img_file:
         image_data = img_file.read()
@@ -19,13 +20,14 @@ def me():
 
     # Create ImageContent with just the base64 data
     image = ImageContent(type="image", data=base64_image, mimeType="image/png")
-
+    headers = get_http_headers()
+    await ctx.info(f"Request Headers: {headers}")
     
     # Combine text and image into a response
     retval = [
-        image,
         TextContent(type="text", text="You have just called the 'me' tool."),
         TextContent(type="text", text="Hello current user! Here is your profile picture:"), 
+        image,
         TextContent(type="text", text="Thank you!")
     ]
     return retval
