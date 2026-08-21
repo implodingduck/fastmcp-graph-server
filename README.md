@@ -12,23 +12,31 @@ For Graph operations, the server exchanges the validated MCP token through the
 Microsoft identity platform On-Behalf-Of flow. Graph tokens are never accepted
 from MCP clients or passed through the server.
 
-Configure one confidential-client app registration:
+The Terraform deployment creates and manages one single-tenant confidential
+client app registration:
 
 1. Expose an API scope named `access_as_user`.
-2. Add delegated Microsoft Graph `Mail.ReadWrite` permission and grant the
-   consent required by your tenant.
-3. Create a client credential for the server. Prefer a certificate or workload
-   identity in production; the current implementation accepts a client secret.
+2. Add delegated Microsoft Graph `Mail.ReadWrite` permission and grant
+   tenant-wide consent.
+3. Create a client secret, rotate it every 180 days, and store it as an encrypted
+   Container Apps secret.
 4. Configure MCP clients to request the exposed MCP scope, not a Graph scope.
 
 Copy `server/.env.example` to a local environment file or configure the same
 values as deployment secrets. Environment files are intentionally ignored by
 Git.
 
-For the Terraform deployment, store the client secret in Key Vault and set
-`TF_VAR_entra_client_secret_key_vault_secret_uri` to that secret's URI. The
-Container App resolves it with its user-assigned managed identity, so the
-credential is not supplied as a Terraform variable.
+The Container App receives the generated client ID and audience and exposes the
+generated Container Apps secret to the process as `ENTRA_CLIENT_SECRET`. Run
+`terraform output mcp_delegated_scope` after deployment to get the scope MCP
+clients must request. Applying the Terraform requires permission to create Entra
+applications and grant delegated consent. The generated credential is sensitive
+and remains in Terraform state, so use a secured remote backend.
+
+Key Vault public access is restricted to selected networks. Terraform looks up
+the deployment host's current public IPv4 address and allows that `/32`, while
+the `AzureServices` bypass enables trusted Microsoft services. The deployment
+host must be able to reach `https://api.ipify.org` during planning and applying.
 
 ## Mail tools
 

@@ -20,6 +20,10 @@ terraform {
       source  = "hashicorp/azuread"
       version = "~> 2.53.1"
     }
+    http = {
+      source  = "hashicorp/http"
+      version = "~> 3.5"
+    }
   }
 }
 
@@ -40,6 +44,10 @@ resource "random_string" "unique" {
 }
 
 data "azurerm_client_config" "current" {}
+
+data "http" "host_public_ip" {
+  url = "https://api.ipify.org"
+}
 
 data "azurerm_log_analytics_workspace" "default" {
   name                = "DefaultWorkspace-${data.azurerm_client_config.current.subscription_id}-${local.loc_short}"
@@ -92,15 +100,28 @@ resource "azurerm_subnet" "pe" {
 }
 
 resource "azurerm_key_vault" "kv" {
-  name                       = "kv-${local.func_name}"
-  location                   = azurerm_resource_group.rg.location
-  resource_group_name        = azurerm_resource_group.rg.name
-  tenant_id                  = data.azurerm_client_config.current.tenant_id
-  sku_name                   = "standard"
-  soft_delete_retention_days = 7
-  purge_protection_enabled   = false
-  rbac_authorization_enabled = true
+  name                          = "kv-${local.func_name}"
+  location                      = azurerm_resource_group.rg.location
+  resource_group_name           = azurerm_resource_group.rg.name
+  tenant_id                     = data.azurerm_client_config.current.tenant_id
+  sku_name                      = "standard"
+  soft_delete_retention_days    = 7
+  purge_protection_enabled      = false
+  rbac_authorization_enabled    = true
+  public_network_access_enabled = true
 
+  network_acls {
+    bypass         = "AzureServices"
+    default_action = "Deny"
+    ip_rules       = ["${trimspace(data.http.host_public_ip.response_body)}/32"]
+  }
+
+  lifecycle {
+    precondition {
+      condition     = can(cidrnetmask("${trimspace(data.http.host_public_ip.response_body)}/32"))
+      error_message = "The public IP lookup did not return a valid IPv4 address."
+    }
+  }
 }
 
 resource "azurerm_role_assignment" "kv_officer" {
@@ -183,11 +204,11 @@ resource "azurerm_container_app" "mcp" {
       }
       env {
         name  = "ENTRA_CLIENT_ID"
-        value = var.entra_client_id
+        value = azuread_application.obo.client_id
       }
       env {
         name  = "MCP_AUDIENCE"
-        value = var.mcp_audience
+        value = azuread_application_identifier_uri.obo.identifier_uri
       }
       env {
         name        = "ENTRA_CLIENT_SECRET"
@@ -219,10 +240,14 @@ resource "azurerm_container_app" "mcp" {
   }
 
   secret {
-    name                = "entra-client-secret"
-    identity            = azurerm_user_assigned_identity.this.id
-    key_vault_secret_id = var.entra_client_secret_key_vault_secret_uri
+    name  = "entra-client-secret"
+    value = azuread_application_password.obo.value
   }
 
   tags = local.tags
+
+  depends_on = [
+    azurerm_role_assignment.containerapptokv,
+    azuread_service_principal_delegated_permission_grant.microsoft_graph
+  ]
 }
