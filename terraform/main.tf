@@ -9,7 +9,7 @@ terraform {
       version = "=3.1.0"
     }
     azapi = {
-      source = "azure/azapi"
+      source  = "azure/azapi"
       version = "=2.3.0"
     }
     time = {
@@ -44,12 +44,12 @@ data "azurerm_client_config" "current" {}
 data "azurerm_log_analytics_workspace" "default" {
   name                = "DefaultWorkspace-${data.azurerm_client_config.current.subscription_id}-${local.loc_short}"
   resource_group_name = "DefaultResourceGroup-${local.loc_short}"
-} 
+}
 
 resource "azurerm_resource_group" "rg" {
   name     = "rg-${local.gh_repo}-${random_string.unique.result}-${local.loc_for_naming}"
   location = var.location
-  tags = local.tags
+  tags     = local.tags
 }
 
 resource "azurerm_virtual_network" "default" {
@@ -80,7 +80,7 @@ resource "azurerm_subnet" "cluster" {
       name    = "Microsoft.App/environments"
       actions = ["Microsoft.Network/virtualNetworks/subnets/join/action"]
     }
-  
+
   }
 }
 
@@ -104,15 +104,15 @@ resource "azurerm_key_vault" "kv" {
 }
 
 resource "azurerm_role_assignment" "kv_officer" {
-  scope                            = azurerm_key_vault.kv.id
-  role_definition_name             = "Key Vault Secrets Officer"
-  principal_id                     = data.azurerm_client_config.current.object_id
+  scope                = azurerm_key_vault.kv.id
+  role_definition_name = "Key Vault Secrets Officer"
+  principal_id         = data.azurerm_client_config.current.object_id
 }
 
 resource "azurerm_role_assignment" "kv_cert_officer" {
-  scope                            = azurerm_key_vault.kv.id
-  role_definition_name             = "Key Vault Certificates Officer"
-  principal_id                     = data.azurerm_client_config.current.object_id
+  scope                = azurerm_key_vault.kv.id
+  role_definition_name = "Key Vault Certificates Officer"
+  principal_id         = data.azurerm_client_config.current.object_id
 }
 
 resource "azurerm_application_insights" "app" {
@@ -157,8 +157,8 @@ resource "azurerm_container_app_environment" "this" {
   tags = local.tags
   lifecycle {
     ignore_changes = [
-     infrastructure_resource_group_name,
-     log_analytics_workspace_id
+      infrastructure_resource_group_name,
+      log_analytics_workspace_id
     ]
   }
 }
@@ -176,6 +176,23 @@ resource "azurerm_container_app" "mcp" {
       image  = "ghcr.io/implodingduck/fastmcp-graph-server:latest"
       cpu    = 0.25
       memory = "0.5Gi"
+
+      env {
+        name  = "ENTRA_TENANT_ID"
+        value = data.azurerm_client_config.current.tenant_id
+      }
+      env {
+        name  = "ENTRA_CLIENT_ID"
+        value = var.entra_client_id
+      }
+      env {
+        name  = "MCP_AUDIENCE"
+        value = var.mcp_audience
+      }
+      env {
+        name        = "ENTRA_CLIENT_SECRET"
+        secret_name = "entra-client-secret"
+      }
     }
     http_scale_rule {
       name                = "http-1"
@@ -197,12 +214,15 @@ resource "azurerm_container_app" "mcp" {
   }
 
   identity {
-    type = "UserAssigned"
+    type         = "UserAssigned"
     identity_ids = [azurerm_user_assigned_identity.this.id]
   }
-  tags = local.tags
 
-  lifecycle {
-    ignore_changes = [ secret ]
+  secret {
+    name                = "entra-client-secret"
+    identity            = azurerm_user_assigned_identity.this.id
+    key_vault_secret_id = var.entra_client_secret_key_vault_secret_uri
   }
+
+  tags = local.tags
 }

@@ -1,0 +1,14 @@
+[project]
+name = "fastmcp-graph-server"
+version = "0.1.0"
+description = "FastMCP server exposing delegated Microsoft Graph tools"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "fastmcp==3.4.7",
+    "httpx==0.28.1",
+    "msal==1.37.0",
+    "pydantic-settings==2.15.0",
+]
+
+[tool.uv]
+package = false

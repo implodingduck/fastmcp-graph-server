@@ -4,12 +4,12 @@ RUN apt-get update && apt-get install -y curl tcpdump net-tools vim
 
 WORKDIR /code
 
-COPY ./requirements.txt /code/requirements.txt
+COPY ./pyproject.toml ./uv.lock /code/
 
-RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
+RUN pip install --no-cache-dir uv==0.12.5 && uv sync --frozen --no-dev
 
 COPY . /code/app
 
 EXPOSE 8000
 
-CMD ["python", "app/server.py"]
+CMD ["/code/.venv/bin/python", "app/server.py"]

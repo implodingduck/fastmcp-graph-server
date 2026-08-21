@@ -35,3 +35,11 @@ override.tf.json
 # Ignore CLI configuration files
 .terraformrc
 terraform.rc
+
+# Local environment files and Python build artifacts
+.env
+.env.*
+!.env.example
+__pycache__/
+*.py[cod]
+.venv/
