@@ -32,6 +32,10 @@ resource "azuread_application" "obo" {
       type = "Scope"
     }
   }
+
+  lifecycle {
+    ignore_changes = [web]
+  }
 }
 
 resource "azuread_application_identifier_uri" "obo" {

@@ -3,9 +3,14 @@ output "entra_application_client_id" {
   value       = azuread_application.obo.client_id
 }
 
+output "entra_tenant_id" {
+  description = "Tenant containing the Terraform-managed OBO app registration."
+  value       = data.azurerm_client_config.current.tenant_id
+}
+
 output "mcp_audience" {
-  description = "Audience clients must use for access tokens sent to the MCP server."
-  value       = azuread_application_identifier_uri.obo.identifier_uri
+  description = "Expected aud claim in Entra v2 access tokens sent to the MCP server."
+  value       = azuread_application.obo.client_id
 }
 
 output "mcp_delegated_scope" {

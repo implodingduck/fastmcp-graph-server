@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 os.environ.setdefault("ENTRA_TENANT_ID", "test-tenant")
 os.environ.setdefault("ENTRA_CLIENT_ID", "test-client")
 os.environ.setdefault("ENTRA_CLIENT_SECRET", "test-secret")
-os.environ.setdefault("MCP_AUDIENCE", "api://test-client")
+os.environ.setdefault("MCP_AUDIENCE", "test-client")
 
 import server
 

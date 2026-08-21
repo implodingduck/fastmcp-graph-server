@@ -108,7 +108,7 @@ resource "azurerm_key_vault" "kv" {
   soft_delete_retention_days    = 7
   purge_protection_enabled      = false
   rbac_authorization_enabled    = true
-  public_network_access_enabled = true
+  public_network_access_enabled = false
 
   network_acls {
     bypass         = "AzureServices"
@@ -208,7 +208,7 @@ resource "azurerm_container_app" "mcp" {
       }
       env {
         name  = "MCP_AUDIENCE"
-        value = azuread_application_identifier_uri.obo.identifier_uri
+        value = azuread_application.obo.client_id
       }
       env {
         name        = "ENTRA_CLIENT_SECRET"

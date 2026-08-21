@@ -33,6 +33,20 @@ clients must request. Applying the Terraform requires permission to create Entra
 applications and grant delegated consent. The generated credential is sensitive
 and remains in Terraform state, so use a secured remote backend.
 
+Entra v2 access tokens identify this API by its client ID in the `aud` claim.
+OAuth clients must still request the full App ID URI scope returned by
+`mcp_delegated_scope`.
+
+After applying the Terraform, print the values needed for a Microsoft Foundry
+custom OAuth connection:
+
+```bash
+./terraform/foundry-auth.sh
+```
+
+Terraform ignores changes to the app registration's Web redirect URIs so the
+callback URI added during Foundry connection setup is preserved.
+
 Key Vault public access is restricted to selected networks. Terraform looks up
 the deployment host's current public IPv4 address and allows that `/32`, while
 the `AzureServices` bypass enables trusted Microsoft services. The deployment
