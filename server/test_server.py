@@ -12,23 +12,23 @@ import server
 
 
 class MailToolHelpersTest(unittest.IsolatedAsyncioTestCase):
-    @patch("server.get_http_headers")
-    def test_get_mcp_access_token(self, headers):
-        headers.return_value = {"authorization": "Bearer mcp-token"}
+    @patch("server.get_access_token")
+    def test_get_mcp_access_token(self, access_token):
+        access_token.return_value = SimpleNamespace(token="mcp-token")
 
         self.assertEqual(server._get_mcp_access_token(), "mcp-token")
 
-    @patch("server.get_http_headers")
-    def test_get_mcp_access_token_requires_bearer_token(self, headers):
-        headers.return_value = {}
+    @patch("server.get_access_token")
+    def test_get_mcp_access_token_requires_bearer_token(self, access_token):
+        access_token.return_value = None
 
         with self.assertRaisesRegex(ValueError, "bearer token"):
             server._get_mcp_access_token()
 
     @patch("server._get_obo_client")
-    @patch("server.get_http_headers")
-    async def test_graph_token_uses_obo(self, headers, get_obo_client):
-        headers.return_value = {"authorization": "Bearer mcp-token"}
+    @patch("server.get_access_token")
+    async def test_graph_token_uses_obo(self, access_token, get_obo_client):
+        access_token.return_value = SimpleNamespace(token="mcp-token")
         acquire_token = get_obo_client.return_value.acquire_token_on_behalf_of
         acquire_token.return_value = {"access_token": "graph-token"}
 
@@ -41,9 +41,13 @@ class MailToolHelpersTest(unittest.IsolatedAsyncioTestCase):
         )
 
     @patch("server._get_obo_client")
-    @patch("server.get_http_headers")
-    async def test_graph_token_surfaces_obo_failure(self, headers, get_obo_client):
-        headers.return_value = {"authorization": "Bearer mcp-token"}
+    @patch("server.get_access_token")
+    async def test_graph_token_surfaces_obo_failure(
+        self,
+        access_token,
+        get_obo_client,
+    ):
+        access_token.return_value = SimpleNamespace(token="mcp-token")
         acquire_token = get_obo_client.return_value.acquire_token_on_behalf_of
         acquire_token.return_value = {
             "error": "invalid_grant",

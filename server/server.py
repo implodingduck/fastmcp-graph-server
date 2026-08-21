@@ -11,7 +11,7 @@ import httpx
 import msal
 from fastmcp import Context, FastMCP
 from fastmcp.server.auth.providers.jwt import JWTVerifier
-from fastmcp.server.dependencies import get_http_headers
+from fastmcp.server.dependencies import get_access_token
 from mcp.types import ImageContent, TextContent
 from pydantic import Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -64,11 +64,10 @@ mcp = FastMCP(
 
 
 def _get_mcp_access_token() -> str:
-    authorization = get_http_headers().get("authorization", "")
-    scheme, _, token = authorization.partition(" ")
-    if scheme.lower() != "bearer" or not token:
+    access_token = get_access_token()
+    if access_token is None or not access_token.token:
         raise ValueError("A bearer token issued for this MCP server is required.")
-    return token
+    return access_token.token
 
 
 @lru_cache(maxsize=1)

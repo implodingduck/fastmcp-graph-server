@@ -44,6 +44,9 @@ custom OAuth connection:
 ./terraform/foundry-auth.sh
 ```
 
+The helper prints the sensitive OAuth client secret and MCP endpoint URL along
+with the remaining connection values. Treat its terminal output as a secret.
+
 Terraform ignores changes to the app registration's Web redirect URIs so the
 callback URI added during Foundry connection setup is preserved.
 
